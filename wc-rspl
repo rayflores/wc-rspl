@@ -1,0 +1,53 @@
+<?php
+/**
+ * Plugin Name: WooCommerce Rearrange Single Product Layout.
+ * Plugin URI: http://rayflores.com/plugins/wc-rspl/
+ * Description: rearrange single product layout.
+ * Version: 1.0.0
+ * Author: Ray Flores
+ * Author URI: http://rayflores.com
+ * License: GPL2
+ */
+add_action('plugins_loaded','wc_rspl_move_all_around');
+ function wc_rspl_move_all_around() {
+ global $MSPC_Frontend_Product;
+				// unhook them all :) 
+				// see fancy product designer removal below -> woocommerce_template_single_title - 5
+				remove_action('woocommerce_single_product_summary','woocommerce_template_single_title', 5);
+                remove_action('woocommerce_single_product_summary','woocommerce_template_single_price', 10);
+                remove_action('woocommerce_single_product_summary','woocommerce_template_single_excerpt',20);
+                remove_action('woocommerce_single_product_summary','woocommerce_template_single_add_to_cart',30);
+                remove_action('woocommerce_single_product_summary','woocommerce_template_single_meta',40);
+                remove_action('woocommerce_single_product_summary','woocommerce_template_single_sharing',50);
+				//this one comes from the fancy product designer at 10	 
+				remove_action( 'woocommerce_before_single_product_summary', 'woocommerce_template_single_title', 10 );
+
+				//now hoom em back in your own order :) 
+				add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_title', 1 );
+				add_action('woocommerce_single_product_summary','woocommerce_template_single_price', 2);
+				add_action('woocommerce_single_product_summary','woocommerce_template_single_excerpt',3);
+				// MultiStep Product Configure sits at order 6 
+				add_action('woocommerce_single_product_summary','woocommerce_template_single_add_to_cart',10);
+                add_action('woocommerce_single_product_summary','woocommerce_template_single_sharing',15);
+				// wish list sits at 31
+                add_action('woocommerce_single_product_summary','woocommerce_template_single_meta',35); 
+}
+			
+// Let's go get our own template (copied from theme and adjustments made)
+add_filter( 'wc_get_template_part', 'wc_rspl_get_plugin_template_part',100,3);
+function wc_rspl_get_plugin_template_part( $template, $slug, $name ) { 
+    // Look in plugin/woocommerce/slug-name.php or plugin/woocommerce/slug.php
+    if ( $name ) {
+        $path = plugin_dir_path( __FILE__ ) . WC()->template_path() . "{$slug}-{$name}.php";    
+    } else {
+        $path = plugin_dir_path( __FILE__ ) . WC()->template_path() . "{$slug}.php";    
+    }
+    return file_exists( $path ) ? $path : $template;
+}
+
+// get path for all other templates.
+add_filter( 'woocommerce_locate_template', 'wc_rspl_get_the_plugin_template', 100,3);
+function wc_rspl_get_the_plugin_template( $template, $template_name, $template_path ) { 
+    $path = plugin_dir_path( __FILE__ ) . $template_path . $template_name;  
+    return file_exists( $path ) ? $path : $template;
+}
